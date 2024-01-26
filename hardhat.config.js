@@ -1,4 +1,5 @@
-// require("@nomicfoundation/hardhat-toolbox");
+// require("@nomiclabs/hardhat-waffle");
+require("@nomicfoundation/hardhat-toolbox");
 const config = require("./scripts/config.json");
 
 //选取ganache下的5个账户的私钥

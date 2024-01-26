@@ -16,13 +16,17 @@ async function main() {
 
 
   // 部署TurnScription合约
+  let _name = "Turn"
+  let _totalSupply = 21000000;
+  let _limitPerMint = 10000;
+  let _maxPerWallet = 20000;
   console.log("start to deploy TurnScription contract====");
   const TurnScription = await hre.ethers.getContractFactory("TurnScription");
-  const turnScription = await TurnScription.deploy(); 
-  console.log(`Depoly TurnScription contract successful, address: ${turnScription.address}`);
+  const turnscription = await TurnScription.deploy(_name, _totalSupply, _limitPerMint, _maxPerWallet); 
+  console.log(`Depoly TurnScription contract successful, address: ${turnscription.address}`);
 
   // 更新config.json文件
-  config.ethSeries.TurnScription = turnScription.address;
+  config.ethSeries.TurnScription = turnscription.address;
   jsonfile.writeFileSync(configFile, config, {spaces: 2});
 }
 

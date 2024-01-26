@@ -3,6 +3,8 @@
 ### 主要参数定义
 - 定义类型
 ```js
+address deployer; // 合约部署者
+uint256 deployTime; // 部署时间
 string name;    // 铭文名称
 bytes32 inscriptionId; // 铭文id
 uint256 totalSupply;   // 总发行量
@@ -37,10 +39,23 @@ constructor(string memory _name, uint256 _totalSupply, uint256 _limitPerMint, ui
 > - _limitPerMint：每次铸币的最小数量
 > - _maxPerWallet：每个地址最大铸币数量
 
+#### 铭文函数签名
+
+```js
+// 0xfb69af88c98f006e0a73f84cb295f4b9008a4feb2770084e18acbf12041a00fd
+function funcSign() external pure returns(bytes32 funcSign_) 
+```
+
+> 返回参数说明：
+>
+> - funcSign_： 函数签名；
+
 #### 获取铭文信息 
 
 ```js
 function getInScriptionInfo() public view returns(
+    address deployer_,
+    uint256 deployTime_,
     string memory name_,
     bytes32 inscriptionId_,
     uint256 totalSupply_,
@@ -50,7 +65,8 @@ function getInScriptionInfo() public view returns(
     uint256 holders_)
 ```
 > 返回参数说明：
->
+> - deployer_: 铭文合约部署者；
+> - deployTime_: 铭文合约部署时间；
 > - name_： 铭文名称；
 > - inscriptionId_：铭文ID；
 > - totalSupply_：总发行量
@@ -99,12 +115,14 @@ function batchTransfer(address _to, uint256[] memory _pids) public
 ```js
 /// @notice 部署合约事件
 /// @dev 部署铭文合约
+/// @param _deployer 铭文合约部署者
+/// @param _deployTime 铭文合约部署时间
 /// @param _name 铭文名称
 /// @param _inscriptionId 铭文id
 /// @param _totalSupply 总发行量
 /// @param _limitPerMint 每次铸币的最小数量
 /// @param _maxPerWallet 每个地址最大铸币数量
-event Deploy(string _name, bytes32 indexed _inscriptionId, uint256 _totalSupply, uint256 _limitPerMint, uint256 _maxPerWallet);
+event Deploy(address _deployer, uint256 _deployTime, string _name, bytes32 indexed _inscriptionId, uint256 _totalSupply, uint256 _limitPerMint, uint256 _maxPerWallet);
 
 /// @notice 铸币事件
 /// @dev 打铭文时触发

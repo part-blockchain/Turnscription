@@ -2,11 +2,14 @@
 pragma solidity ^0.8.17;
 
 contract TurnScription {
+    address deployer; // 铭文合约部署者
+    uint256 deployTime; // 铭文合约部署时间
     string name;    // 铭文名称
     bytes32 inscriptionId; // 铭文id
     uint256 totalSupply;   // 总发行量
     uint256 limitPerMint;  // 每次铸币的最小数量
     uint256 maxPerWallet;  // 每个地址最大铸币数量
+    uint256 maxPaperPerWallet; // 每个地址最大张数
     uint256 minted;  // 已铸币数量
     uint256 holders; // token持有人数
     uint256 curPID; // 当前铭文打到第几张 
@@ -21,12 +24,14 @@ contract TurnScription {
 
     /// @notice 部署合约事件
     /// @dev 部署铭文合约
+    /// @param _deployer 铭文合约部署者
+    /// @param _deployTime 铭文合约部署时间
     /// @param _name 铭文名称
     /// @param _inscriptionId 铭文id
     /// @param _totalSupply 总发行量
     /// @param _limitPerMint 每次铸币的最小数量
     /// @param _maxPerWallet 每个地址最大铸币数量
-    event Deploy(string _name, bytes32 indexed _inscriptionId, uint256 _totalSupply, uint256 _limitPerMint, uint256 _maxPerWallet);
+    event Deploy(address _deployer, uint256 _deployTime, string _name, bytes32 indexed _inscriptionId, uint256 _totalSupply, uint256 _limitPerMint, uint256 _maxPerWallet);
 
     /// @notice 铸币事件
     /// @dev 打铭文时触发
@@ -42,9 +47,18 @@ contract TurnScription {
     /// @param _pids 转移的paper id
     event BatchTransfer(address indexed _from, address indexed _to, uint256[] _pids);
 
+    // 0xfb69af88c98f006e0a73f84cb295f4b9008a4feb2770084e18acbf12041a00fd
+    function funcSign() external pure returns(bytes32 funcSign_) {
+        funcSign_ = keccak256("TurnScription()");
+    }
+
     constructor(string memory _name, uint256 _totalSupply, uint256 _limitPerMint, uint256 _maxPerWallet) {
         require(0 < _limitPerMint, "The number of coins minted at a time must be greater than 0");
-        require(0 < _totalSupply && _totalSupply >= _limitPerMint * _maxPerWallet, "Exceed maximum circulation");
+        require(0 < _totalSupply && _maxPerWallet >= _limitPerMint && _totalSupply >= _maxPerWallet, "Exceed maximum circulation");
+        require(0 == _maxPerWallet % _limitPerMint, "An integer multiple of the maximum coin size that is not the minimum coin size");
+        maxPaperPerWallet = _maxPerWallet / _limitPerMint;
+        deployer = msg.sender;
+        deployTime = block.timestamp;
         name = _name;
         inscriptionId = bytes32(keccak256(abi.encodePacked(address(this))));
         totalSupply = _totalSupply;
@@ -53,12 +67,15 @@ contract TurnScription {
         minted = 0;
         holders = 0;
         curPID = 1;   // 从第一张铭文开始打
+
         // 触发事件
-        emit Deploy(name, inscriptionId, totalSupply, limitPerMint, maxPerWallet);
+        emit Deploy(deployer, deployTime, name, inscriptionId, totalSupply, limitPerMint, maxPerWallet);
     }
 
     // 获取铭文信息
     function getInScriptionInfo() public view returns(
+        address deployer_,
+        uint256 deployTime_,
         string memory name_,
         bytes32 inscriptionId_,
         uint256 totalSupply_,
@@ -67,6 +84,8 @@ contract TurnScription {
         uint256 minted_,
         uint256 holders_
     ) {
+        deployer_ = deployer;
+        deployTime_ = deployTime;
         name_ = name;
         inscriptionId_ = inscriptionId;
         totalSupply_ = totalSupply;
@@ -127,7 +146,7 @@ contract TurnScription {
         // 获取用户的paper list
         uint256[] storage pidList = usersHolding[msg.sender];
         uint256 mintedNum = pidList.length;
-        require( mintedNum < maxPerWallet, "The address has reached the maximum number of engraved coins");
+        require( mintedNum < maxPaperPerWallet, "The address has reached the maximum number of engraved coins");
         if( mintedNum == 0) {
             // 此地址未打过铭文
             holders += 1;
@@ -171,6 +190,8 @@ contract TurnScription {
         uint256[] memory pidList = usersHolding[msg.sender];
         require(pidList.length >= _pids.length, "The transferred paper id list has the wrong length");
         uint256[] storage toPidList = usersHolding[_to];
+        // 批量转账之前to地址持有铭文数量
+        uint256 toBeforeLen = toPidList.length;
         for(uint256 i = 0; i < _pids.length; i++) {
             // 校验pid是否存在
             uint256 pid = _pids[i];
@@ -181,6 +202,14 @@ contract TurnScription {
             // 转账
             delSenderPid(index);
             toPidList.push(pid);
+        }
+        
+        if(0 == toBeforeLen && 0 != usersHolding[msg.sender].length) {
+            // 1.批量转账之前to地址未持有铭文；2.转账之后from地址仍然持有铭文
+            holders += 1;
+        } else if(toBeforeLen > 0 && 0 == usersHolding[msg.sender].length) {
+            // 1.批量转账之前to地址已持有铭文；2.转账之后from地址不再持有铭文
+            holders -= 1;
         }
         emit BatchTransfer(msg.sender, _to, _pids);
     }

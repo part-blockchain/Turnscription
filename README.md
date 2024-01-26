@@ -108,7 +108,7 @@ module.exports = {
   npx hardhat compile
   ```
 
-  > 编译后的合约代码将被保存在./artifacts/contracts目录中 ;
+  > 编译后的合约代码将被保存在./artifacts/contracts目录中;
 
 - 部署合约
 
