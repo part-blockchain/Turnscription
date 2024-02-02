@@ -154,7 +154,7 @@ contract TurnScription {
         Paper storage paper = paperInfo[curPID];
         paper.pid = curPID;
         string memory timeRand = uintToString(block.timestamp);
-        paper.randDes = string.concat(_randNum, timeRand);
+        paper.randDes = string.concat(timeRand, _randNum);
        
         pidList.push(curPID);
         // 已铸币数量

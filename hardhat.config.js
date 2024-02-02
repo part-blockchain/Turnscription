@@ -29,7 +29,7 @@ module.exports = {
 
     // ganache本地网络
     ganache: {
-      url: `http://192.168.31.234:8545`,
+      url: `http://192.168.31.234:7545`,
       // 私钥方式
       // accounts: [`0x${PRIVATE_KEY1}`,`0x${PRIVATE_KEY2}`,`0x${PRIVATE_KEY3}`,`0x${PRIVATE_KEY4}`,`0x${PRIVATE_KEY5}`],
       // 助记词方式
